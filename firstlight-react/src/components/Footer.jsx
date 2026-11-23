@@ -40,12 +40,12 @@ export default function Footer() {
         <div className="giant-wrap" ref={reelRef}>
           <svg className="giant-svg" viewBox="16 50 968 170" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
             <defs>
-              <clipPath id="wm-clip"><text x="500" y="214" textAnchor="middle">THEROUGHCUT</text></clipPath>
+              <clipPath id="wm-clip"><text x="500" y="214" textAnchor="middle" textLength="936" lengthAdjust="spacing">LASTFRAME</text></clipPath>
             </defs>
             <foreignObject x="-20" y="-20" width="1040" height="260" clipPath="url(#wm-clip)">
               <video xmlns="http://www.w3.org/1999/xhtml" className="giant-film" src={`/video/sm/${WORDMARK_CLIP}.mp4`} poster={`/video/sm/${WORDMARK_CLIP}.jpg`} muted loop playsInline preload="metadata" />
             </foreignObject>
-            <text className="giant-fallback" x="500" y="214" textAnchor="middle">THEROUGHCUT</text>
+            <text className="giant-fallback" x="500" y="214" textAnchor="middle" textLength="936" lengthAdjust="spacing">LASTFRAME</text>
           </svg>
         </div>
       </div>

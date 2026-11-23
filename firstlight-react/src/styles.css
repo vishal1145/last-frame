@@ -534,7 +534,7 @@ footer.wrapfoot{position:relative}
 .horizon{position:relative;width:100%;margin-top:36px;aspect-ratio:5.69;overflow:hidden}
 .horizon .giant-wrap{position:absolute;left:0;bottom:-2.7%;width:100%;height:100%} /* baseline flush with the page edge */
 .horizon .giant-svg{display:block;width:100%;height:100%;overflow:visible}
-.horizon .giant-svg text{font-family:var(--disp);font-weight:800;font-size:194px;letter-spacing:4px} /* sized so THEROUGHCUT spans the full 1000-unit box, edge to edge of the page margins */
+.horizon .giant-svg text{font-family:var(--disp);font-weight:800;font-size:194px;letter-spacing:4px} /* sized so the wordmark spans the full 1000-unit box, edge to edge of the page margins */
 .horizon .giant-fallback{fill:none;stroke:rgba(25,26,22,.22);stroke-width:1.5} /* faint outline so the word reads even on a dark frame */
 .horizon .giant-film{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(1.15) contrast(1.05)}
 
