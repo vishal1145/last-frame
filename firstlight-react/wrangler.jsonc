@@ -1,0 +1,12 @@
+{
+  "name": "lastframe-studio",
+  "compatibility_date": "2026-09-26",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist"
+  },
+  "routes": [
+    { "pattern": "lastframe.studio", "custom_domain": true },
+    { "pattern": "www.lastframe.studio", "custom_domain": true }
+  ]
+}
