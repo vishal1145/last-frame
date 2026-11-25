@@ -68,6 +68,9 @@ const CLEAN_STAGE = true
 const HERO_PILLS = false // the pill headline + big frame was rejected the same hour ("not looking good, creative nahi lag raha")
 // the settled hero now: an endless tunnel of the films (tunnel.js), the headline centred in the light at its end
 const HERO_TUNNEL = true // back the same day: the 3D glass hero was rejected ("pehle jaisa tha vaise karo") // the tunnel was the hero the manager called "much better, we need some more effort"
+// the tunnel in real 3D (tunnel3d.js, three.js) since 2026-11-24 (user: "three.js sample use kr skte hai, can make more better"):
+// true perspective, frames bent to the wall, the near ones playing their film, dust, hover lift. false = the 2D canvas tunnel
+const TUNNEL_3D = true
 // the settled hero now (manager: "try the reference I sent — hyperframes — check three.js samples"): the glass ribbon in real
 // 3D (glass3d.js, WebGL2), on the reference's warm greige studio with a soft spectral light, the headline in ink
 const HERO_GL = false
@@ -75,6 +78,10 @@ const PILL_MS = 4200
 // the settled hero (2026-11-23, "isko bhi kuch behtar banao"): the glass ribbon keeps flowing on the dark stage, carrying the
 // film the (now invisible) ring has in front — the counter, the caption, drag and click still drive it; the headline word follows.
 const SETTLED_RIBBON = false // off 2026-11-23: the ribbon in the settled hero was rejected twice (dark: "achha nahi lag raha", greige: "creativity not looking good") — the ring is back
+// the glass act in real 3D (shards3d.js, three.js) since 2026-11-24 (user: "this section can make more better and creative"): on the
+// night stage, glass assembles into a clean screen per film, shatters toward the camera, the last one falls into the point the
+// logo flares from. false = the 2D glass ribbon on the greige studio
+const SHARDS_3D = true
 const SHARD_FILMS = [FILMS[0], FILMS.find((f) => /Runway/.test(f.title)) || FILMS[1], STOCK[0]].filter(Boolean)
 // the clouds we punch through: set round the middle (never on it), each flies outward as it grows, so the view opens
 const CLOUDS = Array.from({ length: 9 }, (_, i) => { const a = i * 2.4 + .6, r = .15 + (i % 3) * .055; return { x: 50 + Math.cos(a) * r * 125, y: 50 + Math.sin(a) * r * 100, w: 300 + ((i * 131) % 380) } })
@@ -134,12 +141,20 @@ export default function Hero() {
   const tunnelRef = useRef(null)
   useEffect(() => { // the settled hero's film tunnel
     if (!HERO_TUNNEL || !R.current.tunnel || reduceMotion()) return
-    const tn = createTunnel(R.current.tunnel, FILMS, {
+    const opts = {
       getPointer: () => st.current.ptr || { x: 0, y: 0, in: false }, alpha: () => st.current.tnA || 0,
       onPick: (i) => { const f = FILMS[i]; setPlay({ title: f.title, sub: f.word, src: f.clip, poster: f.poster }) },
-    })
-    tunnelRef.current = tn
-    return () => { tn.destroy(); tunnelRef.current = null }
+    }
+    const host = R.current.tunnel
+    let tn = null, gone = false
+    const flat = () => { host.replaceChildren(); tn = tunnelRef.current = createTunnel(host, FILMS, opts) } // no WebGL: the 2D canvas tunnel
+    // three.js loads in its own chunk while the opening plays (the tunnel only shows once the logo docks)
+    if (TUNNEL_3D) import('../tunnel3d.js').then(({ createTunnel3d }) => {
+      if (gone) return
+      try { tn = tunnelRef.current = createTunnel3d(host, FILMS, opts) } catch (e) { console.warn('tunnel3d', e); flat() }
+    }, flat)
+    else flat()
+    return () => { gone = true; tn?.destroy(); tunnelRef.current = null }
   }, [])
   const shardsRef = useRef(null), ribbonRef = useRef(null)
   useEffect(() => { // the settled hero's ribbon
@@ -158,9 +173,16 @@ export default function Hero() {
   }, [])
   useEffect(() => { // the glass films of the corridor act (shards.js), built once; the frame loop drives them
     if (!R.current.shards || reduceMotion()) return
-    const sh = createShards(R.current.shards, SHARD_FILMS, { start: M.corridor[0] + 250, step: 1900 })
-    shardsRef.current = sh
-    return () => { sh.destroy(); shardsRef.current = null }
+    const host = R.current.shards
+    let sh = null, gone = false
+    const flat = () => { host.replaceChildren(); sh = shardsRef.current = createShards(host, SHARD_FILMS, { start: M.corridor[0] + 250, step: 1900 }) }
+    // three.js loads in its own chunk during the first acts (space, the globe, the clouds: ~3.8 s before the glass)
+    if (SHARDS_3D) import('../shards3d.js').then(({ createShards3d }) => {
+      if (gone) return
+      try { sh = shardsRef.current = createShards3d(host, SHARD_FILMS, { getPointer: () => st.current.ptr || { x: 0, y: 0, in: false } }) } catch (e) { console.warn('shards3d', e); flat() }
+    }, () => { if (!gone) flat() })
+    else flat()
+    return () => { gone = true; sh?.destroy(); shardsRef.current = null }
   }, [])
   useEffect(() => {
     const root = sec.current, canvas = cv.current
@@ -247,9 +269,22 @@ export default function Hero() {
           const a = Math.min(1, starsV * tw * (s.big ? 1 : .18 + .82 * s.z * s.z * s.z)) // a natural sky: most stars faint and fine, a few bright ("ye dots achhe nahi lag rahe")
           if (a < .01) continue
           ctx.fillStyle = `rgba(${s.c[0]},${s.c[1]},${s.c[2]},${a.toFixed(3)})`
-          if (zoomV > .02) { // warp: streaks away from the centre while we push forward
-            const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy) || 1, len = zoomV * zoomV * 70 * s.z * (d / (Math.max(W, H) * .5))
-            ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = .6 + s.z; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx / d * len, y + dy / d * len); ctx.stroke()
+          if (zoomV > .02) { // warp (2026-11-24, user: "ye dot line wali bni hai, ese behtr"): the stars really fly out from the centre,
+            // faster toward the edges, each with a tail that fades to nothing — instead of fixed dashes that read as a dotted pattern
+            const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy) || 1, R = Math.max(W, H) * .5
+            const grow = 1 + zoomV * (.0009 + s.z * .0016) * dt // perspective: the further out, the faster
+            s.x = (cx + dx * grow) / W; s.y = (cy + dy * grow) / H
+            s.fin = Math.min(1, (s.fin ?? 1) + dt / 400)
+            if (s.x < -.05 || s.x > 1.05 || s.y < -.05 || s.y > 1.05) { // gone off screen: born again near the middle
+              const ang = Math.random() * 6.283, r = (.04 + Math.random() * .22) * R
+              s.x = (cx + Math.cos(ang) * r) / W; s.y = (cy + Math.sin(ang) * r) / H; s.fin = 0
+            }
+            const len = zoomV * (8 + 150 * s.z * s.z) * (d / R), hx = s.x * W, hy = s.y * H
+            const tx = hx - dx / d * len, ty = hy - dy / d * len, aa = a * s.fin * Math.min(1, .35 + d / R)
+            const gr = ctx.createLinearGradient(tx, ty, hx, hy)
+            gr.addColorStop(0, `rgba(${s.c[0]},${s.c[1]},${s.c[2]},0)`); gr.addColorStop(1, `rgba(${s.c[0]},${s.c[1]},${s.c[2]},${aa.toFixed(3)})`)
+            ctx.strokeStyle = gr; ctx.lineWidth = .5 + s.z * 1.1; ctx.lineCap = 'round'
+            ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke()
           } else if (s.big || s.mid) {
             // sparkle: mostly a calm glow, now and then a sharp flash with the glint
             const fl = Math.pow(Math.abs(Math.sin(now * .0011 * s.sp + s.ph)), s.big ? 10 : 6)
@@ -359,7 +394,7 @@ export default function Hero() {
         const ap = u(t, M.approach[0], M.approach[1]), cl = u(t, M.clouds[0], M.clouds[1]), co = u(t, M.corridor[0], M.corridor[1]), cvg = u(t, M.converge[0] - 300, M.converge[1])
         // space + approach: the globe grows toward the camera, stars streak; after the clouds the stars come back and streak again through the corridor
         // the studio lights: up as we leave the clouds, down before the logo
-        const brightV = SHOW_CORRIDOR ? 0 : smooth(u(t, M.corridor[0] - 350, M.corridor[0] + 250)) * (1 - smooth(u(t, M.corridor[1] - 800, M.corridor[1] - 100)))
+        const brightV = SHOW_CORRIDOR || SHARDS_3D ? 0 : smooth(u(t, M.corridor[0] - 350, M.corridor[0] + 250)) * (1 - smooth(u(t, M.corridor[1] - 800, M.corridor[1] - 100)))
         set('bright', 'opacity', brightV.toFixed(3))
         shardsRef.current?.update(t, M.corridor[0], M.corridor[1])
         starsV = Math.max(u(t, 0, 900) * (1 - cl), .8 * u(t, M.clouds[0] + 150, M.corridor[0] + 500)) * (1 - brightV)

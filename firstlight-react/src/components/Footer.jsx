@@ -32,7 +32,7 @@ export default function Footer() {
       </div>
 
       <div className="cred-base num">
-        <span>© 2026 TheRoughCut. All rights reserved.</span>
+        <span>© 2026 LastFrame. All rights reserved.</span>
       </div>
 
       <div className="horizon" aria-hidden="true">

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
-<defs>
-<clipPath id="ca"><polygon points="0,0 120,0 120,40 0,80"/></clipPath>
-<clipPath id="cb"><polygon points="0,88 120,48 120,120 0,120"/></clipPath>
-<mask id="m"><rect x="-10" y="-10" width="140" height="140" fill="#fff"/><polygon points="48,38 84,60 48,82" fill="#000"/></mask>
-</defs>
-<g clip-path="url(#ca)"><circle cx="60" cy="60" r="52" fill="#E39B17" mask="url(#m)"/></g>
-<g clip-path="url(#cb)"><g transform="translate(7,3)"><circle cx="60" cy="60" r="52" fill="#111111" mask="url(#m)"/></g></g>
-</svg>
