@@ -8,13 +8,13 @@ const mail = <a href={'mailto:' + EMAIL}>{EMAIL}</a>
 const PAGES = {
   terms: {
     title: 'Terms &', accent: 'conditions.',
-    intro: 'These terms apply to your use of the TheRoughCut website. By using the site, you agree to them.',
+    intro: 'These terms apply to your use of the LastFrame website. By using the site, you agree to them.',
     sections: [
       ['Using this site', 'You may browse the site and contact us about a project. Please do not misuse it, interfere with how it works, or copy its content for commercial use without our permission.'],
-      ['Project work', 'Nothing on this site is a binding offer. Scope, price, timelines, revisions and ownership of any video we make are set out in a separate written agreement between you and TheRoughCut.'],
-      ['Content and trademarks', 'The videos, text and design on this site belong to TheRoughCut or its licensors. Client names and logos belong to their respective owners and are shown only to identify work or relationships.'],
+      ['Project work', 'Nothing on this site is a binding offer. Scope, price, timelines, revisions and ownership of any video we make are set out in a separate written agreement between you and LastFrame.'],
+      ['Content and trademarks', 'The videos, text and design on this site belong to LastFrame or its licensors. Client names and logos belong to their respective owners and are shown only to identify work or relationships.'],
       ['No warranty', 'We work to keep the site accurate and available, but it is provided as it is, without any promise that it will always be complete, current or uninterrupted.'],
-      ['Limitation of liability', 'To the extent the law allows, TheRoughCut is not liable for indirect or consequential loss arising from your use of this site.'],
+      ['Limitation of liability', 'To the extent the law allows, LastFrame is not liable for indirect or consequential loss arising from your use of this site.'],
       ['External links', 'The site may link to other websites. We do not control them and are not responsible for their content or practices.'],
       ['Governing law', 'These terms are governed by the laws of India.'],
       ['Changes', 'We may update these terms from time to time. The date at the top of this page shows the latest version.'],
@@ -23,7 +23,7 @@ const PAGES = {
   },
   privacy: {
     title: 'Privacy', accent: 'policy.',
-    intro: 'This policy explains what information TheRoughCut receives when you use this website, and how it is used.',
+    intro: 'This policy explains what information LastFrame receives when you use this website, and how it is used.',
     sections: [
       ['What we collect', <>
         The brief form on this site does not store anything. When you send it, your own email app opens with the details you entered, and nothing reaches us unless you choose to send that email. If you do email us, we receive what you include, such as your name, email address, phone number, company name and details about your product or project.
