@@ -48,7 +48,12 @@ export const projects = [
 const W = (n) => ({ clip: `/video/work/${n}.mp4`, poster: `/video/work/${n}.jpg` })
 const WORK_CLIPS = ['perfume', 'coffee', 'runway', 'unboxing', 'ember', 'sneakers']
 export const workFilms = [
-  ...projects.map((p, i) => ({ ...p, ...W(WORK_CLIPS[i]) })),
+  ...projects.map((p, i) => ({ ...p, ...W(WORK_CLIPS[i]) })).map((p, i) => i !== 4 ? p : {
+    // 2026-11-26: our own film in place of "House of Ember" (Work reel only; the hero still uses projects[4]).
+    // clip = a silent 10 s loop for the frame; full = the whole film with sound, played when the frame is clicked
+    no: 'PRJ 05', title: 'Snow Gate', cat: 'Cinematic Short Films', kind: 'Short film', meta: '2026 · 04:36', tc: '04:36',
+    art: 'radial-gradient(circle at 50% 40%,#E8552F,#120C07 72%)', ...W('snowgate'), full: '/video/work/snowgate-full.mp4',
+  }),
   { no: 'PRJ 07', title: 'Behind the Lens', cat: 'Documentary & Interviews', kind: 'Interview film', meta: '2026 · 00:50', tc: '00:50',
     art: 'linear-gradient(165deg,#1b1b1f,#4a4a55)', ...W('interview') },
   { no: 'PRJ 08', title: 'The Edit Suite', cat: 'Making-of & Process Films', kind: 'Behind the scenes', meta: '2026 · 00:35', tc: '00:35',

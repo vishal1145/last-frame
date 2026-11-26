@@ -19,7 +19,7 @@ function Frame({ p, i, open, after, d, playing, onOpen }) {
     <div role="button" tabIndex={0} className={'frame' + (open ? ' open' : '') + (playing ? ' playing' : '')} style={{ '--d': d, '--sh': after ? '30px' : '-30px' }}
          onClick={() => playing ? toggle() : onOpen(i)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); playing ? toggle() : onOpen(i) } }} aria-label={`Play ${p.title}`}>
       {p.clip && !broken
-        ? <video ref={vid} className="art" src={p.clip} poster={p.poster || undefined} muted={!playing} loop playsInline preload="metadata" onError={() => setBroken(true)} aria-hidden={!playing} />
+        ? <video ref={vid} className="art" src={playing && p.full ? p.full : p.clip} poster={p.poster || undefined} muted={!playing} loop={!(playing && p.full)} playsInline preload="metadata" onError={() => setBroken(true)} aria-hidden={!playing} />
         : <span className="art" style={{ background: p.art }} aria-hidden="true"></span>}
       <span className="fside" aria-hidden="true">{p.title}</span>
       <span className="fmeta"><b>{p.title}</b></span>
