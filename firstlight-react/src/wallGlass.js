@@ -76,9 +76,14 @@ export function createWallGlass(host, { shapes, films, getChosen, getRegion, get
   }
   const frame = (now) => {
     raf = running ? requestAnimationFrame(frame) : 0
+    const R = getRegion()
+    if (!R) { // no window (2026-11-26: the film box was removed, "keep word only"): just the still glass wall
+      if (!cacheOk) { paintCache(); full = true }
+      if (full) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, vw, vh); g.drawImage(cache, 0, 0); full = false }
+      return
+    }
     const want = getChosen()
     if (want !== cur) { prev = cur; cur = want; switchAt = reduce || !prev ? -1e9 : now; media[cur].v.play().catch(() => {}) }
-    const R = getRegion(); if (!R) return
     const Wn = windowFor(cur, R), Wo = prev ? windowFor(prev, R) : Wn
     const since = now - switchAt, ocx = Wn.x + Wn.w / 2, ocy = Wn.y + Wn.h / 2, far = Math.hypot(vw, vh)
     if (prev && since > WAVE + FLIP + 50) { if (prev !== cur) media[prev].v.pause(); prev = null }

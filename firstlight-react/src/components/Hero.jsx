@@ -620,8 +620,6 @@ export default function Hero() {
         <div ref={el('shards')} className="sk-shards" aria-hidden="true"></div>
         {HERO_GL && <div ref={el('g3')} className="sk-g3" aria-hidden="true"></div>}
         {HERO_TUNNEL && <div ref={el('tunnel')} className="sk-tunnel" aria-hidden="true"></div>}
-        {/* a simple "Coming soon" board hanging on two threads from the top, swaying gently (2026-11-26) */}
-        <div className="soon-hang" role="note"><i className="soon-th"></i><i className="soon-th"></i><span className="soon-board">Coming soon</span></div>
         {SETTLED_RIBBON && <div ref={el('ribbon')} className="sk-shards sk-ribbon" aria-hidden="true"></div>}
 
         {/* the film corridor the camera flies through (off: SHOW_CORRIDOR) */}

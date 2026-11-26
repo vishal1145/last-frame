@@ -47,7 +47,7 @@ export default function Legal({ page }) {
       <section id="legal">
         <div className="gut rail">
           <article className="legal">
-            <h1 className="sec-h">{title} <span className="ser">{accent}</span></h1>
+            <h1 className="sec-h nw one">{title} <span className="ser ser-in">{accent}</span></h1>
             <p className="legal-date">Last updated: 2 November 2026</p>
             <p>{intro}</p>
             {sections.map(([heading, body]) => (

@@ -24,11 +24,10 @@ export default function Footer() {
           <p className="cred-brand"><img src="/brand/lastframe.png" alt="LastFrame" width="1862" height="500" loading="lazy" decoding="async" /></p>
           <p className="cred-tag">advertisement videos, made in-house</p>
         </div>
-        <dl className="credits">
-          <div><dt>Studio</dt><dd><a href="/#work">Our work</a><a href="/#craft">Clients</a><a href="/#formats">Every shape</a></dd></div>
-          <div><dt>Office</dt><dd><a href="/#wrap-sec">Contact us</a></dd></div>
-          <div><dt>Legal</dt><dd><a href="/terms.html">Terms &amp; Conditions</a><a href="/privacy.html">Privacy Policy</a></dd></div>
-        </dl>
+        {/* one row of links (2026-11-26): the Studio / Office / Legal columns were removed */}
+        <nav className="credits cred-row" aria-label="Footer">
+          <a href="/#wrap-sec">Contact us</a><a href="/terms.html">Terms &amp; Conditions</a><a href="/privacy.html">Privacy Policy</a>
+        </nav>
       </div>
 
       <div className="cred-base num">

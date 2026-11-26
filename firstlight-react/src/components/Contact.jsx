@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { EMAIL } from '../data.js'
+import { WA_URL } from './Nav.jsx'
 import Footer from './Footer.jsx'
 // ribbon.js (WebGL strip), formatStage.js (projector stage) and the viewfinder (in git-less backups) were replaced 2026-11-23 by
 // the glass mosaic below (shapeGlass.js): the chosen shape is built of glass, and breaks and re-forms into the next one
@@ -142,10 +143,16 @@ export default function Contact() {
         <div className="sg" ref={glassHost} aria-hidden="true"></div>
         <div className="gut rail rb-ui">
           <div className="rb-left">
+            {/* rewritten 2026-11-26 ("thoda behtar tareeke se likho"): a label, the ask, one line on what happens next, and the direct lines */}
             <div className="mk-head rv" id="formats">
-              <h2 className="sec-h">Films in every shape. <span className="ser">let's make it happen.</span></h2>
+              <h2 className="sec-h">Got a product? <span className="ser">let's make it a film.</span></h2>
+              <p className="mk-sub">Tell us what you're launching and where it will run. We'll come back with an <strong>idea, a timeline and a quote</strong>.</p>
+              <ul className="mk-reach">
+                <li><span>Email</span><a href={`mailto:${EMAIL}`}>{EMAIL}</a></li>
+                <li><span>WhatsApp</span><a href={WA_URL} target="_blank" rel="noopener noreferrer">Chat with us</a></li>
+              </ul>
             </div>
-            <div className="sg-region" ref={region} aria-hidden="true"></div>
+            {/* the film window (sg-region) was removed 2026-11-26 ("remove this, keep word only"); put it back to show a film again */}
             {/* the format chips were removed 2026-11-23 ("not looking good"): the shapes walk on their own */}
           </div>
           <div className="rb-right rv">

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 // WhatsApp number, country code + digits only (e.g. 919876543210). Empty = opens WhatsApp without a number.
 const WA_NUMBER = '919953813101'
 const WA_TEXT = "Hi LastFrame, I'd like to talk about a video for my product."
-const WA_URL = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_TEXT)}`
+export const WA_URL = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(WA_TEXT)}`
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
