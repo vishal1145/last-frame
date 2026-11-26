@@ -43,7 +43,7 @@ const N = FILMS.length
 // the settled tunnel's own films (2026-11-25: "new and clean video not blur"): sharp 1280×720 Mixkit clips (Free licence,
 // mixkit.co/license) in public/video/tunnel/ — the old ones were 480×270/960×540 copies that smeared on the near frames
 const TN = (n, title) => ({ title, poster: `/video/tunnel/${n}.jpg`, clip: `/video/tunnel/${n}.mp4` })
-const TUNNEL_FILMS = [TN('product', 'The Product Shoot'), TN('fashion', 'Studio Fashion'), TN('launch', 'The Launch'), TN('social', 'Social Reel'),
+const TUNNEL_FILMS = [TN('soda', 'The Pour'), TN('fashion', 'Studio Fashion'), TN('launch', 'The Launch'), TN('social', 'Social Reel'),
   TN('explainer', 'The Explainer'), TN('brand', 'Fresh Press'), TN('food', 'Food Film'), TN('beauty', 'Beauty Close-Up'), TN('chocolate', 'Dark Chocolate')]
 const two = (n) => String(n).padStart(2, '0')
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v)
@@ -620,6 +620,8 @@ export default function Hero() {
         <div ref={el('shards')} className="sk-shards" aria-hidden="true"></div>
         {HERO_GL && <div ref={el('g3')} className="sk-g3" aria-hidden="true"></div>}
         {HERO_TUNNEL && <div ref={el('tunnel')} className="sk-tunnel" aria-hidden="true"></div>}
+        {/* a simple "Coming soon" board hanging on two threads from the top, swaying gently (2026-11-26) */}
+        <div className="soon-hang" role="note"><i className="soon-th"></i><i className="soon-th"></i><span className="soon-board">Coming soon</span></div>
         {SETTLED_RIBBON && <div ref={el('ribbon')} className="sk-shards sk-ribbon" aria-hidden="true"></div>}
 
         {/* the film corridor the camera flies through (off: SHOW_CORRIDOR) */}
