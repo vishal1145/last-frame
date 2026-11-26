@@ -23,22 +23,37 @@ const VERT = /* glsl */`
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
   }`
 const FRAG = /* glsl */`
-  uniform sampler2D map;
-  uniform float uAlpha, uLit, uAspect;
+  uniform sampler2D map, vmap;
+  uniform float uAlpha, uLit, uAspect, uMix, uDepth;
   varying vec2 vUv;
   float rbox(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r; }
   void main() {
     vec2 p = (vUv - .5) * vec2(uAspect, 1.);
-    float d = rbox(p, vec2(uAspect, 1.) * .5, .07);
+    float d = rbox(p, vec2(uAspect, 1.) * .5, .05);
     float aa = fwidth(d) * 1.2;
     float shape = 1. - smoothstep(-aa, aa, d);
     if (shape < .01) discard;
-    vec3 col = texture2D(map, vUv).rgb;
-    col *= 1. + .12 * uLit;                                      // the film reads clean (2026-11-25: "shadow black, clean this"); lit frames a touch brighter
-    float rim = 1. - smoothstep(0., .018 + aa, -d);              // the glass edge
+    /* every frame is a piece of 35mm film: a dark base with sprocket holes along both long edges, the picture between */
+    float band = .095, ev = min(vUv.y, 1. - vUv.y);
+    vec2 iuv = vec2(vUv.x, clamp((vUv.y - band) / (1. - 2. * band), 0., 1.));
+    vec3 col = texture2D(map, iuv).rgb;
+    if (uMix > .001) col = mix(col, texture2D(vmap, iuv).rgb, uMix);
+    float lum = dot(col, vec3(.299, .587, .114));
+    col = mix(col, vec3(lum) * vec3(1.08, .86, .62), uDepth * .5) * (1. - uDepth * .3); /* far frames: a warm, quieter grade */
+    col *= 1. + .14 * uLit;
+    float pic = smoothstep(band - .004, band + .004, ev);
+    vec3 base = mix(vec3(.07, .055, .04), vec3(.42, .27, .09), uLit * .8);
+    float pitch = .17, hx = mod(p.x + 10., pitch) - pitch * .5, hy = ev - band * .5;
+    float hole = rbox(vec2(hx, hy), vec2(.036, .022), .009);
+    float ha = fwidth(hole) * 1.2;
+    float inHole = (1. - smoothstep(-ha, ha, hole)) * (1. - pic);
+    float holeRim = (1. - smoothstep(0., .008 + ha, abs(hole))) * (1. - pic);
+    col = mix(base, col, pic);
+    col = mix(col, vec3(1., .78, .45), holeRim * (.18 + .55 * uLit));
+    float rim = 1. - smoothstep(0., .014 + aa, -d);
     vec3 rimCol = mix(vec3(.95, .94, .9), vec3(1., .77, .43), uLit);
-    col = mix(col, rimCol, rim * (.25 + .6 * uLit));
-    gl_FragColor = vec4(col, shape * uAlpha);
+    col = mix(col, rimCol, rim * (.2 + .6 * uLit));
+    gl_FragColor = vec4(col, shape * uAlpha * (1. - inHole * .92)); /* the holes are see-through */
   }`
 
 export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
@@ -87,12 +102,12 @@ export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
     const film = (j * PER + k * 3) % films.length
     const mat = new THREE.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthWrite: false, side: THREE.DoubleSide,
-      uniforms: { map: { value: posters[film] }, uAlpha: { value: 0 }, uLit: { value: 0 }, uLift: { value: 0 }, uAspect: { value: LEN / H } },
+      uniforms: { map: { value: posters[film] }, vmap: { value: posters[film] }, uMix: { value: 0 }, uDepth: { value: 0 }, uAlpha: { value: 0 }, uLit: { value: 0 }, uLift: { value: 0 }, uAspect: { value: LEN / H } },
     })
     const mesh = new THREE.Mesh(geo, mat)
     mesh.rotation.z = (k / PER) * Math.PI * 2 + j * .34
     tube.add(mesh)
-    frames.push({ j, k, film, mesh, mat, ph: Math.random() * 6.28, sp: .3 + Math.random() * .5, lift: 0 })
+    frames.push({ j, k, film, mesh, mat, ph: Math.random() * 6.28, sp: .3 + Math.random() * .5, lift: 0, mix: 0 })
   }
 
   // amber dust drifting toward the camera: depth you can feel between the walls
@@ -124,7 +139,7 @@ export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
   size(); addEventListener('resize', size)
 
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2()
-  let travel = 0, slow = 0, last = 0, hover = null, la = 0
+  let travel = 0, spin = 0, slow = 0, last = 0, hover = null, la = 0, sdt = 16, pk = 0, lpx = -1, lpy = -1
   const cam = { x: 0, y: 0 }
 
   const pick = (x, y) => {
@@ -135,7 +150,8 @@ export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
 
   return {
     update(now) {
-      const dt = Math.min(now - last || 16, 50); last = now
+      const rdt = Math.min(now - last || 16, 50); last = now
+      sdt += (rdt - sdt) * .12; const dt = sdt // smoothed frame time: one slow frame no longer jolts the flight
       la = alpha()
       cv.style.opacity = vg.style.opacity = la.toFixed(3)
       if (la < .01) { hover = null; for (const v of vids) if (v?.on) { v.el.pause(); v.on = false } return }
@@ -144,12 +160,16 @@ export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
       camera.position.set(cam.x * 1.1, -cam.y * .8, 0); camera.lookAt(-cam.x * .6, cam.y * .45, -20)
       camera.rotation.z += cam.x * .06
       travel += dt * (D / 1700) * (1 - slow * .8)
-      tube.rotation.z = now * .00005
+      spin += dt * .00024 * (1 - slow * .85) // a full turn in ~26 s (was ~2 min: "bhut slow round"), easing off under a hovered frame
+      tube.rotation.z = spin + Math.sin(now * .00035) * .12 // with a slow sway, so the turn breathes instead of ticking
 
-      hover = P.in ? pick(P.x, P.y) : null
-      slow += ((hover ? 1 : 0) - slow) * .08
+      if (!P.in) hover = null
+      else if (P.x !== lpx || P.y !== lpy || ++pk % 6 === 0) { hover = pick(P.x, P.y); lpx = P.x; lpy = P.y }
+      slow += ((hover ? 1 : 0) - slow) * .05
       cv.style.cursor = hover ? 'pointer' : ''
 
+      // a band of warm light runs down the tunnel toward the camera every few seconds, lighting the film it passes
+      const WAVE = SPAN * 1.5, waveZ = SPAN - ((now * .011) % WAVE)
       // place every frame, fade it by distance, light it now and then (and when hovered)
       const near = []
       for (const f of frames) {
@@ -160,7 +180,9 @@ export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
         f.lift += ((f === hover ? 1 : 0) - f.lift) * .12
         const u = f.mat.uniforms
         u.uAlpha.value = la * fog // solid: no dark stage showing through the film
-        u.uLit.value = Math.max(pulse * .7, f.lift)
+        const wv = Math.exp(-Math.pow((zd - waveZ) / 5, 2))
+        u.uLit.value = Math.max(pulse * .6, f.lift, wv * .9)
+        u.uDepth.value = clamp01((zd - LEN * 2) / (SPAN * .45))
         u.uLift.value = f.lift
         f.mesh.renderOrder = -Math.round(zd * 10)
         if (fog > .5) near.push([zd, f])
@@ -172,10 +194,16 @@ export function createTunnel3d(host, films, { getPointer, alpha, onPick }) {
       if (hover) want.add(hover.film)
       for (const [, f] of near) { if (want.size >= MAX_VIDEO) break; want.add(f.film) }
       vids.forEach((v, i) => {
-        if (want.has(i)) { const vv = videoFor(i); if (!vv.on) { vv.on = true; vv.el.play().catch(() => {}) } }
-        else if (v?.on) { v.el.pause(); v.on = false }
+        if (want.has(i)) { const vv = videoFor(i); vv.idle = 0; if (!vv.on) { vv.on = true; vv.el.play().catch(() => {}) } }
+        else if (v?.on && (v.idle = (v.idle || 0) + dt) > 1200) { v.el.pause(); v.on = false; v.ready = false }
       })
-      for (const f of frames) { const v = vids[f.film]; f.mat.uniforms.map.value = v?.on && v.ready ? v.tex : posters[f.film] }
+      const mk = Math.min(1, dt * .004)
+      for (const f of frames) {
+        const v = vids[f.film], u = f.mat.uniforms, live = v?.on && v.ready
+        if (live) u.vmap.value = v.tex
+        f.mix += ((live ? 1 : 0) - f.mix) * mk
+        u.uMix.value = f.mix < .002 ? 0 : f.mix
+      }
 
       // dust drifts toward the camera with the flight
       const arr = dgeo.attributes.position.array, step = dt * (D / 1700) * (1 - slow * .8) * 1.4

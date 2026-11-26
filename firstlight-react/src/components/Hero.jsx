@@ -22,7 +22,8 @@ const reduceMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(pre
 // (the 3.2 s "set" act with four lamp cones was cut the same night: "mountain part looking bakwas" — its time went to the corridor)
 // (2026-11-23, "ye blank jaisa kyu aa rha hai": the haze + soft clouds held an empty screen for ~1.3 s. Now the haze is a
 // short glow at the rim, the clouds rush outward like a tunnel and the first film is already in the middle of the view)
-const T = { space: 1400, approach: 1900, clouds: 500, corridor: 6400, converge: 1000, logo: 900, hold: 700, dock: 700 }
+const T = { space: 2000, approach: 3200, clouds: 500, corridor: 6400, converge: 1000, logo: 900, hold: 700, dock: 700 }
+// (2026-11-25, user: "ye earth thoda slow work krna hai": space 1400→2000, approach 1900→3200 — the earth comes in calmly)
 const M = {}; { let a = 0; for (const k in T) { M[k] = [a, a + T[k]]; a += T[k] } M.end = a }
 const LEAD_MS = 2600
 const SPIN = 11 // deg/s: the film ring's resting spin (a full turn in ~33 s)
@@ -39,6 +40,11 @@ const FILMS = [
   F(projects[4], 'brand films'), F(projects[1], 'food films'), F(projects[0], 'beauty ads'),
 ].filter(Boolean)
 const N = FILMS.length
+// the settled tunnel's own films (2026-11-25: "new and clean video not blur"): sharp 1280×720 Mixkit clips (Free licence,
+// mixkit.co/license) in public/video/tunnel/ — the old ones were 480×270/960×540 copies that smeared on the near frames
+const TN = (n, title) => ({ title, poster: `/video/tunnel/${n}.jpg`, clip: `/video/tunnel/${n}.mp4` })
+const TUNNEL_FILMS = [TN('product', 'The Product Shoot'), TN('fashion', 'Studio Fashion'), TN('launch', 'The Launch'), TN('social', 'Social Reel'),
+  TN('explainer', 'The Explainer'), TN('brand', 'Fresh Press'), TN('food', 'Food Film'), TN('beauty', 'Beauty Close-Up'), TN('chocolate', 'Dark Chocolate')]
 const two = (n) => String(n).padStart(2, '0')
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v)
 const easeIn = (t) => t * t * t
@@ -143,15 +149,15 @@ export default function Hero() {
     if (!HERO_TUNNEL || !R.current.tunnel || reduceMotion()) return
     const opts = {
       getPointer: () => st.current.ptr || { x: 0, y: 0, in: false }, alpha: () => st.current.tnA || 0,
-      onPick: (i) => { const f = FILMS[i]; setPlay({ title: f.title, sub: f.word, src: f.clip, poster: f.poster }) },
+      onPick: (i) => { const f = TUNNEL_FILMS[i]; setPlay({ title: f.title, sub: f.word, src: f.clip, poster: f.poster }) },
     }
     const host = R.current.tunnel
     let tn = null, gone = false
-    const flat = () => { host.replaceChildren(); tn = tunnelRef.current = createTunnel(host, FILMS, opts) } // no WebGL: the 2D canvas tunnel
+    const flat = () => { host.replaceChildren(); tn = tunnelRef.current = createTunnel(host, TUNNEL_FILMS, opts) } // no WebGL: the 2D canvas tunnel
     // three.js loads in its own chunk while the opening plays (the tunnel only shows once the logo docks)
     if (TUNNEL_3D) import('../tunnel3d.js').then(({ createTunnel3d }) => {
       if (gone) return
-      try { tn = tunnelRef.current = createTunnel3d(host, FILMS, opts) } catch (e) { console.warn('tunnel3d', e); flat() }
+      try { tn = tunnelRef.current = createTunnel3d(host, TUNNEL_FILMS, opts) } catch (e) { console.warn('tunnel3d', e); flat() }
     }, flat)
     else flat()
     return () => { gone = true; tn?.destroy(); tunnelRef.current = null }
@@ -177,9 +183,11 @@ export default function Hero() {
     let sh = null, gone = false
     const flat = () => { host.replaceChildren(); sh = shardsRef.current = createShards(host, SHARD_FILMS, { start: M.corridor[0] + 250, step: 1900 }) }
     // three.js loads in its own chunk during the first acts (space, the globe, the clouds: ~3.8 s before the glass)
-    if (SHARDS_3D) import('../shards3d.js').then(({ createShards3d }) => {
+    // 2026-11-25: the films now form out of a particle storm (user: "kuchh awsome look wala"); ?hx_fx=shards shows the glass shards
+    const glass = new URLSearchParams(location.search).get('hx_fx') === 'shards'
+    if (SHARDS_3D) (glass ? import('../shards3d.js').then((m) => m.createShards3d) : import('../particles3d.js').then((m) => m.createParticles3d)).then((create) => {
       if (gone) return
-      try { sh = shardsRef.current = createShards3d(host, SHARD_FILMS, { getPointer: () => st.current.ptr || { x: 0, y: 0, in: false } }) } catch (e) { console.warn('shards3d', e); flat() }
+      try { sh = shardsRef.current = create(host, SHARD_FILMS, { getPointer: () => st.current.ptr || { x: 0, y: 0, in: false } }) } catch (e) { console.warn('films3d', e); flat() }
     }, () => { if (!gone) flat() })
     else flat()
     return () => { gone = true; sh?.destroy(); shardsRef.current = null }
@@ -201,22 +209,50 @@ export default function Hero() {
       const room = st.getBoundingClientRect().left - h.getBoundingClientRect().left - 48
       h.style.setProperty('--plcap', Math.max(44, room / 9.6).toFixed(1) + 'px')
     }
-    const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = root.clientWidth; H = root.clientHeight; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); setRail(); placeFly(); fitPills(); if (Q.amb) { Q.amb.width = W >= H ? 96 : 54; Q.amb.height = Math.max(8, Math.round(Q.amb.width * H / W)) } }
+    // a real night sky (2026-11-25, user: "nyt me jaise sky hota hai vaisa kro"): drawn once per size — the Milky Way as a
+    // diagonal band of glow with dark dust lanes, thousands of faint stars (denser in the band), true star colours
+    const SKYC = [[170, 192, 255], [200, 214, 255], [232, 238, 255], [255, 255, 255], [255, 247, 234], [255, 229, 196], [255, 205, 158]]
+    const skyCol = (r) => SKYC[r < .1 ? 0 : r < .26 ? 1 : r < .5 ? 2 : r < .72 ? 3 : r < .87 ? 4 : r < .96 ? 5 : 6]
+    // its own layer under the stars: drawn only when the size changes, faded by the compositor (opacity), never redrawn per frame
+    // (2026-11-25, user: "is it work very slow" — it was a full-screen drawImage every frame on top of the 3D)
+    const skyC = document.createElement('canvas'); skyC.className = 'sk-starsky'; skyC.setAttribute('aria-hidden', 'true'); root.prepend(skyC)
+    let skyW = 0, skyH = 0, skyO = ''
+    const buildSky = () => {
+      if (Math.abs(W - skyW) < 2 && Math.abs(H - skyH) < 60) return // ignore tiny resizes (mobile toolbars)
+      skyW = W; skyH = H
+      const q = Math.min(dpr, 1.5), c = skyC; c.width = Math.max(1, Math.round(W * q)); c.height = Math.max(1, Math.round(H * q))
+      const g = c.getContext('2d'); g.setTransform(q, 0, 0, q, 0, 0)
+      const r = prng(7), gauss = () => (r() + r() + r() + r() - 2) / 2
+      const ax = -.05 * W, ay = .92 * H, bx = 1.05 * W, by = .06 * H, L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux
+      const band = Math.min(W, H) * .2
+      g.globalCompositeOperation = 'lighter'
+      for (let i = 0; i < 170; i++) { // the band's glow: soft overlapping clouds, warmer at the core
+        const t = r(), o = gauss() * band * .55, x = ax + ux * L * t + nx * o, y = ay + uy * L * t + ny * o, rad = band * (.35 + r() * .6)
+        const core = 1 - Math.min(1, Math.abs(t - .55) * 1.6), col = '120,140,200' // a faint cool tint, not a white smoke (user: "ye white color ka kyu aa rha hai")
+        const gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, `rgba(${col},${(.006 + core * .006).toFixed(3)})`); gr.addColorStop(1, `rgba(${col},0)`)
+        g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2)
+      }
+      g.globalCompositeOperation = 'source-over'
+      for (let i = 0; i < 26; i++) { // dark dust lanes along the middle of the band
+        const t = r(), o = gauss() * band * .18, x = ax + ux * L * t + nx * o, y = ay + uy * L * t + ny * o, rad = band * (.18 + r() * .3)
+        g.save(); g.translate(x, y); g.rotate(Math.atan2(uy, ux)); g.scale(2.4, 1)
+        const gr = g.createRadialGradient(0, 0, 0, 0, 0, rad); gr.addColorStop(0, 'rgba(3,5,12,.12)'); gr.addColorStop(1, 'rgba(3,5,12,0)')
+        g.fillStyle = gr; g.fillRect(-rad, -rad, rad * 2, rad * 2); g.restore()
+      }
+      const dot = (x, y, a) => { const s = .35 + Math.pow(r(), 3) * 1.1, k = skyCol(r()); g.fillStyle = `rgba(${k[0]},${k[1]},${k[2]},${a.toFixed(3)})`; g.fillRect(x - s / 2, y - s / 2, s, s) }
+      const nAll = Math.round(W * H / 700), nBand = Math.round(L * band / 110)
+      for (let i = 0; i < nAll; i++) dot(r() * W, r() * H, .12 + Math.pow(r(), 2.5) * .7)
+      for (let i = 0; i < nBand; i++) { const t = r(), o = gauss() * band * .6; dot(ax + ux * L * t + nx * o, ay + uy * L * t + ny * o, .08 + Math.pow(r(), 3) * .55) }
+    }
+    const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = root.clientWidth; H = root.clientHeight; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); buildSky(); setRail(); placeFly(); fitPills(); if (Q.amb) { Q.amb.width = W >= H ? 96 : 54; Q.amb.height = Math.max(8, Math.round(Q.amb.width * H / W)) } }
     size(); const ro = new ResizeObserver(size); ro.observe(root)
 
     // particles
     const rnd = prng(42)
-    const stars = Array.from({ length: 240 }, (_, i) => ({ x: rnd(), y: rnd(), z: .3 + rnd() * .7, ph: rnd() * 6.28, c: rnd() < .35 ? PASTEL[i % PASTEL.length] : [236, 242, 255], big: i % 20 === 0, mid: false, sp: .6 + rnd() * .9 })) // brighter since 2026-11-23 (user: "stars bahut dim hai", then "chamak nahi rahe")
-    // star sprites, drawn once: a soft glow, and a four-point glint for the bright stars that sparkle
+    const stars = Array.from({ length: 240 }, (_, i) => ({ x: rnd(), y: rnd(), z: .3 + rnd() * .7, ph: rnd() * 6.28, c: skyCol(rnd()), big: i % 24 === 0, mid: false, sp: .6 + rnd() * .9 })) // brighter since 2026-11-23 (user: "stars bahut dim hai", then "chamak nahi rahe")
+    // star sprite, drawn once: a soft glow round the brightest stars (no four-point glints: the real sky has none)
     const sprite = (n, draw) => { const c = document.createElement('canvas'); c.width = c.height = n; draw(c.getContext('2d'), n / 2); return c }
     const GLOW = sprite(64, (g, h) => { const r = g.createRadialGradient(h, h, 0, h, h, h); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.12, 'rgba(255,250,240,.85)'); r.addColorStop(.35, 'rgba(220,230,255,.22)'); r.addColorStop(1, 'rgba(200,215,255,0)'); g.fillStyle = r; g.fillRect(0, 0, h * 2, h * 2) })
-    const GLINT = sprite(128, (g, h) => {
-      for (const [w, a] of [[1, 1], [.55, .55]]) { // the long cross, then a shorter diagonal one
-        g.save(); g.translate(h, h); if (a < 1) g.rotate(Math.PI / 4)
-        for (const rot of [0, Math.PI / 2]) { g.save(); g.rotate(rot); const L = h * w, lg = g.createLinearGradient(-L, 0, L, 0); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(.5, `rgba(255,255,255,${a})`); lg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = lg; g.fillRect(-L, -.9, L * 2, 1.8); g.restore() }
-        g.restore()
-      }
-    })
     // bokeh dust: points in a depth field that drift toward the camera, parallax with the pointer, and gather into the mark
     const dust = Array.from({ length: 130 }, (_, i) => ({ x: rnd() * 2 - 1, y: rnd() * 2 - 1, z: .25 + rnd(), r: .5 + rnd() * 1.5, ph: rnd() * 6.28, sp: .5 + rnd(), c: PASTEL[i % PASTEL.length] }))
     const clouds = CLOUDS.map((c, i) => ({ ...c, start: M.clouds[0] - 450 + (i / 9) * (T.clouds + 250) }))
@@ -228,7 +264,7 @@ export default function Hero() {
     let dayOn = false
     const lightsOn = () => { if (dayOn || !DAY_STAGE) return; dayOn = true; setDay(true); html.classList.add('hx-day') } // the night gives way to the pastel stage (off: DAY_STAGE)
     const finishInstant = () => { lightsOn(); html.classList.remove('hx-intro'); setLift(true); setStage('settled'); setSeen({ h1: 1, cta: 1, ring: 1 }); ['globe', 'haze', 'clouds', 'logo', 'sun', 'skip', 'corridor', 'flash', 'nebula', 'meteors', 'shards'].forEach((k) => Q[k] && (Q[k].style.display = 'none')); Q.rays && (Q.rays.style.opacity = .6) }
-    if (rm) { finishInstant(); return () => ro.disconnect() }
+    if (rm) { finishInstant(); skyC.style.opacity = '1'; return () => { ro.disconnect(); skyC.remove() } }
     html.classList.add('hx-intro')
     // the page stays at the top until the whole opening has played (the lead has lit the ring); a pinned frame or a #hash load is left alone
     const lockable = PIN == null && !location.hash, keys = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '])
@@ -263,9 +299,11 @@ export default function Hero() {
     const drawCanvas = (now, dt) => {
       ctx.clearRect(0, 0, W, H)
       const cx = W / 2, cy = H / 2
+      const skyA = starsV * (1 - clamp01(zoomV * 4)) // the still sky fades as the warp starts
+      const so = skyA < .01 ? '0' : skyA.toFixed(2); if (so !== skyO) { skyO = so; skyC.style.opacity = so }
       if (starsV > .01) {
         for (const s of stars) {
-          const x = s.x * W, y = s.y * H, tw = .68 + .32 * Math.abs(Math.sin(now * .0012 + s.ph))
+          const x = s.x * W, y = s.y * H, tw = .78 + .22 * Math.sin(now * .0021 * s.sp + s.ph) * Math.sin(now * .0013 + s.ph * 2)
           const a = Math.min(1, starsV * tw * (s.big ? 1 : .18 + .82 * s.z * s.z * s.z)) // a natural sky: most stars faint and fine, a few bright ("ye dots achhe nahi lag rahe")
           if (a < .01) continue
           ctx.fillStyle = `rgba(${s.c[0]},${s.c[1]},${s.c[2]},${a.toFixed(3)})`
@@ -286,15 +324,13 @@ export default function Hero() {
             ctx.strokeStyle = gr; ctx.lineWidth = .5 + s.z * 1.1; ctx.lineCap = 'round'
             ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke()
           } else if (s.big || s.mid) {
-            // sparkle: mostly a calm glow, now and then a sharp flash with the glint
-            const fl = Math.pow(Math.abs(Math.sin(now * .0011 * s.sp + s.ph)), s.big ? 10 : 6)
-            const gs = 6 + s.z * 5 + fl * 8
+            // the brightest stars: a crisp point with a soft halo that breathes a little
+            const gs = 4 + s.z * 4 + 1.2 * Math.sin(now * .0017 * s.sp + s.ph)
             ctx.globalCompositeOperation = 'lighter'
-            ctx.fillRect(x - 1, y - 1, 2, 2) // between flashes: a crisp bright point
-            if (fl > .04) { ctx.globalAlpha = Math.min(1, starsV * fl); ctx.drawImage(GLOW, x - gs, y - gs, gs * 2, gs * 2) }
-            if (s.big && fl > .05) { const L = 10 + s.z * 12 + fl * 26; ctx.globalAlpha = Math.min(1, starsV * fl); ctx.drawImage(GLINT, x - L, y - L, L * 2, L * 2) }
+            ctx.fillRect(x - .9, y - .9, 1.8, 1.8)
+            ctx.globalAlpha = Math.min(1, a * .6); ctx.drawImage(GLOW, x - gs, y - gs, gs * 2, gs * 2)
             ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'
-          } else { const r = .7 + s.z * s.z * 1.2; ctx.fillRect(x - r / 2, y - r / 2, r, r) }
+          } else { const r = .5 + s.z * s.z * .9; ctx.fillRect(x - r / 2, y - r / 2, r, r) }
         }
       }
       if (dustV > .01) {
@@ -531,7 +567,7 @@ export default function Hero() {
     root.addEventListener('pointermove', move); root.addEventListener('pointerleave', leave)
     const io = new IntersectionObserver(([e]) => { cancelAnimationFrame(raf); raf = 0; if (e.isIntersecting) { last = 0; raf = requestAnimationFrame(frame) } }, { threshold: 0 })
     io.observe(root)
-    return () => { on = false; cancelAnimationFrame(raf); clearTimeout(safety); ro.disconnect(); io.disconnect(); root.removeEventListener('pointermove', move); root.removeEventListener('pointerleave', leave); html.classList.remove('hx-intro'); html.classList.remove('hx-day'); unlock()
+    return () => { on = false; cancelAnimationFrame(raf); clearTimeout(safety); ro.disconnect(); skyC.remove(); io.disconnect(); root.removeEventListener('pointermove', move); root.removeEventListener('pointerleave', leave); html.classList.remove('hx-intro'); html.classList.remove('hx-day'); unlock()
       if (ringEl) { ringEl.removeEventListener('pointerdown', rDown); ringEl.removeEventListener('pointermove', rMove); ringEl.removeEventListener('pointerup', rUp); ringEl.removeEventListener('pointercancel', rUp); ringEl.removeEventListener('click', rClick, true); ringEl.removeEventListener('pointerenter', rEnter); ringEl.removeEventListener('pointerleave', rLeave) } }
   }, [])
 

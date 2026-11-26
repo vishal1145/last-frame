@@ -531,7 +531,7 @@ footer.wrapfoot{position:relative}
   flex-wrap:wrap;align-items:center;font-family:var(--body);font-weight:500;font-size:14px;letter-spacing:.02em;color:var(--ink-2)}
 /* the horizon: giant wordmark on the page's bottom edge; the film plays INSIDE the letters (first light through the type).
    An inline SVG draws the word as <text>; the same text is a clipPath on a <foreignObject> that holds the video. */
-.horizon{position:relative;width:100%;margin-top:36px;aspect-ratio:5.69;overflow:hidden}
+.horizon{position:relative;width:100%;margin-top:36px;aspect-ratio:5.42;overflow:hidden}
 .horizon .giant-wrap{position:absolute;left:0;bottom:-2.7%;width:100%;height:100%} /* baseline flush with the page edge */
 .horizon .giant-svg{display:block;width:100%;height:100%;overflow:visible}
 .horizon .giant-svg text{font-family:var(--disp);font-weight:800;font-size:194px;letter-spacing:4px} /* sized so the wordmark spans the full 1000-unit box, edge to edge of the page margins */

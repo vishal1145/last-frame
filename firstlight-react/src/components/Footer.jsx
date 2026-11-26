@@ -38,7 +38,7 @@ export default function Footer() {
       <div className="horizon" aria-hidden="true">
         {/* the wordmark is a window — the film plays inside the letters (SVG text clip) */}
         <div className="giant-wrap" ref={reelRef}>
-          <svg className="giant-svg" viewBox="16 50 968 170" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+          <svg className="giant-svg" viewBox="39 50 922 170" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
             <defs>
               <clipPath id="wm-clip"><text x="500" y="214" textAnchor="middle" textLength="936" lengthAdjust="spacing">LASTFRAME</text></clipPath>
             </defs>
